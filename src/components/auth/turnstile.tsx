@@ -8,7 +8,7 @@ interface CaptchaProps extends Omit<TurnstileProps, "siteKey"> {
 }
 
 export const Captcha = forwardRef<TurnstileInstance, CaptchaProps>(
-  ({ siteKey, ...props }, ref) => {
+  ({ siteKey, options, ...props }, ref) => {
     const defaultSiteKey = 
       process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || 
       process.env.NEXT_PUBLIC_CLOUDFLARE_TRUSTLINE_SITE_KEY_NON_INTERACTIVE || 
@@ -19,11 +19,19 @@ export const Captcha = forwardRef<TurnstileInstance, CaptchaProps>(
       return null;
     }
 
+    // Default options for non-interactive mode if not provided
+    const mergedOptions = {
+      appearance: "always" as const,
+      size: "normal" as const,
+      ...options,
+    };
+
     return (
-      <div className="flex justify-center w-full my-4">
+      <div className="flex justify-center w-full my-2">
         <Turnstile
           ref={ref}
           siteKey={siteKey || defaultSiteKey}
+          options={mergedOptions}
           {...props}
         />
       </div>
