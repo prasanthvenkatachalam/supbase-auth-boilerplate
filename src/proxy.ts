@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/middleware';
 
 const intlMiddleware = createMiddleware(routing);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const intlResponse = intlMiddleware(request);
   
   const response = await createClient(request, intlResponse);
