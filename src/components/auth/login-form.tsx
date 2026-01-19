@@ -73,6 +73,7 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <input type="hidden" {...register("captchaToken")} />
             <div className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">{t("email")}</Label>
@@ -120,8 +121,12 @@ export function LoginForm({
 
             <Captcha
               ref={captchaRef}
-              onSuccess={(token) => setValue("captchaToken", token)}
+              onSuccess={(token) => {
+                console.log("Turnstile Token Received:", token.substring(0, 20) + "...");
+                setValue("captchaToken", token, { shouldValidate: true });
+              }}
               onExpire={() => {
+                console.log("Turnstile Token Expired");
                 setValue("captchaToken", "");
                 setServerError(t("errors.captcha_expired"));
               }}
