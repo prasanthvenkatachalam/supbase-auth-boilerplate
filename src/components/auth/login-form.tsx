@@ -122,11 +122,9 @@ export function LoginForm({
             <Captcha
               ref={captchaRef}
               onSuccess={(token) => {
-                console.log("Turnstile Token Received:", token.substring(0, 20) + "...");
                 setValue("captchaToken", token, { shouldValidate: true });
               }}
               onExpire={() => {
-                console.log("Turnstile Token Expired");
                 setValue("captchaToken", "");
                 setServerError(t("errors.captcha_expired"));
               }}

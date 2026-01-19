@@ -48,7 +48,6 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         setSuccess(true);
       },
       onError: (error) => {
-        console.error("Signup error:", error);
         // Reset captcha on error
         captchaRef.current?.reset();
         setValue("captchaToken", "");
@@ -155,11 +154,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 <Captcha
                   ref={captchaRef}
                   onSuccess={(token) => {
-                    console.log("Turnstile Token Received:", token.substring(0, 20) + "...");
                     setValue("captchaToken", token, { shouldValidate: true });
                   }}
                   onExpire={() => {
-                    console.log("Turnstile Token Expired");
                     setValue("captchaToken", "");
                     setServerError(t("errors.captcha_expired"));
                   }}
