@@ -23,6 +23,7 @@ export const Captcha = forwardRef<TurnstileInstance, CaptchaProps>(
     const mergedOptions = {
       appearance: "always" as const,
       size: "normal" as const,
+      refreshExpired: "auto" as const,
       ...options,
     };
 

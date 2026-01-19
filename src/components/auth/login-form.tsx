@@ -123,6 +123,10 @@ export function LoginForm({
               ref={captchaRef}
               onSuccess={(token) => {
                 setValue("captchaToken", token, { shouldValidate: true });
+                // Clear captcha-related errors if we just got a fresh token
+                if (serverError === t("errors.captcha_expired") || serverError === t("errors.captcha_failed")) {
+                  setServerError(null);
+                }
               }}
               onExpire={() => {
                 setValue("captchaToken", "");
