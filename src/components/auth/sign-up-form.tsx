@@ -32,6 +32,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -112,11 +113,24 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     <Label htmlFor="password">{t("password")}</Label>
                     <PasswordInput
                       id="password"
+                      placeholder="••••••••"
                       {...register("password")}
                       className={cn(errors.password && "border-destructive")}
                     />
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirmPassword">{t("confirm_password")}</Label>
+                    <PasswordInput
+                      id="confirmPassword"
+                      placeholder="••••••••"
+                      {...register("confirmPassword")}
+                      className={cn(errors.confirmPassword && "border-destructive")}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
                     )}
                   </div>
                 </div>
