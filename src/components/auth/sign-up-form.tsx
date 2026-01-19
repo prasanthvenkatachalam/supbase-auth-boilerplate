@@ -42,7 +42,21 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         setSuccess(true);
       },
       onError: (error) => {
-        setServerError(error.message || t("errors.default"));
+        // Enhanced error handling for rate limiting and other errors
+        const errorMessage = error.message || t("errors.default");
+        
+        // Check if it's a rate limit error
+        if (errorMessage.includes("Too many attempts") || errorMessage.includes("Rate limit")) {
+          setServerError(errorMessage);
+        } 
+        // Check if email already exists
+        else if (errorMessage.includes("already exists")) {
+          setServerError("This email is already registered. Please use the login page.");
+        }
+        // Generic error
+        else {
+          setServerError(errorMessage);
+        }
       },
     });
   };

@@ -8,10 +8,7 @@ const intlMiddleware = createMiddleware(routing);
 export async function middleware(request: NextRequest) {
   const intlResponse = intlMiddleware(request);
   
-  const { supabase, response } = createClient(request, intlResponse);
-  
-  // Refresh session if needed
-  await supabase.auth.getUser();
+  const response = await createClient(request, intlResponse);
   
   return response;
 }

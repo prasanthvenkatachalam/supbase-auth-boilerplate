@@ -22,16 +22,62 @@ export const signInWithEmail = async (credentials: LoginInput) => {
   return data;
 };
 
+/**
+ * Sign up with email using rate-limited API endpoint
+ * 
+ * This now calls our custom API route instead of directly calling Supabase.
+ * Benefits:
+ * 1. Rate limiting is enforced server-side
+ * 2. IP tracking for abuse prevention
+ * 3. Better error handling
+ * 4. Automatic profile creation via database trigger
+ * 
+ * The API route (/api/auth/signup) handles:
+ * - Multi-layer rate limiting (IP, email, global)
+ * - Input validation
+ * - Supabase authentication
+ * - Profile creation (automatic via trigger)
+ */
 export const signUpWithEmail = async (credentials: SignUpInput) => {
-  const supabase = createClient();
+  // Validate input before sending to API
   const { email, password } = signUpSchema.parse(credentials);
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
+  // Call our API route instead of Supabase directly
+  const response = await fetch("/api/auth/signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
   });
 
-  if (error) throw error;
+  const data = await response.json();
+
+  // Handle different error scenarios
+  if (!response.ok) {
+    // Rate limit error (429)
+    if (response.status === 429) {
+      const retryAfter = data.retryAfter || 900;
+      const minutes = Math.ceil(retryAfter / 60);
+      throw new Error(
+        data.message || `Too many attempts. Please try again in ${minutes} minutes.`
+      );
+    }
+
+    // Email already exists (409)
+    if (response.status === 409) {
+      throw new Error("An account with this email already exists. Please log in instead.");
+    }
+
+    // Validation error (400)
+    if (response.status === 400) {
+      throw new Error(data.message || "Invalid email or password format.");
+    }
+
+    // Generic error
+    throw new Error(data.message || "Failed to create account. Please try again.");
+  }
+
   return data;
 };
 
