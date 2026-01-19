@@ -14,18 +14,22 @@ import { Label } from "@/components/ui/label";
 import { useSignUp } from "@/hooks/api/use-auth";
 import { signUpSchema, type SignUpInput } from "@/lib/validations/auth";
 import { ROUTES } from "@/constants";
-import { CheckIcon } from "@/components/icons";
+import { Captcha } from "@/components/auth/turnstile";
+import type { TurnstileInstance } from "@marsidev/react-turnstile";
+import { useRef } from "react";
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const t = useTranslations("auth");
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const captchaRef = useRef<TurnstileInstance>(null);
 
   const { mutate: signUp, isPending } = useSignUp();
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
@@ -33,6 +37,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       email: "",
       password: "",
       confirmPassword: "",
+      captchaToken: "",
     },
   });
 
@@ -43,6 +48,10 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         setSuccess(true);
       },
       onError: (error) => {
+        // Reset captcha on error
+        captchaRef.current?.reset();
+        setValue("captchaToken", "");
+
         // Enhanced error handling for rate limiting and other errors
         const errorMessage = error.message || t("errors.default");
         
@@ -95,6 +104,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
           ) : (
             <>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <input type="hidden" {...register("captchaToken")} />
                 <div className="space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="email">{t("email")}</Label>
@@ -139,6 +149,30 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   <div className="text-sm text-destructive font-medium bg-destructive/10 p-3 rounded-md">
                     {serverError}
                   </div>
+                )}
+
+                <Captcha
+                  ref={captchaRef}
+                  onSuccess={(token) => {
+                    setValue("captchaToken", token, { shouldValidate: true });
+                    // Clear captcha-related errors if we just got a fresh token
+                    if (serverError === t("errors.captcha_expired") || serverError === t("errors.captcha_failed")) {
+                      setServerError(null);
+                    }
+                  }}
+                  onExpire={() => {
+                    setValue("captchaToken", "");
+                    setServerError(t("errors.captcha_expired"));
+                  }}
+                  onError={() => {
+                    setServerError(t("errors.captcha_failed"));
+                    setValue("captchaToken", "");
+                  }}
+                />
+                {errors.captchaToken && (
+                  <p className="text-sm text-destructive mt-[-1rem] mb-4 text-center">
+                    {errors.captchaToken.message}
+                  </p>
                 )}
 
                 <Button type="submit" className="w-full" disabled={isPending}>

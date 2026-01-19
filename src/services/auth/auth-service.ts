@@ -16,6 +16,9 @@ export const signInWithEmail = async (credentials: LoginInput) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    options: {
+      captchaToken: credentials.captchaToken,
+    },
   });
 
   if (error) throw error;
@@ -48,7 +51,7 @@ export const signUpWithEmail = async (credentials: SignUpInput) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, captchaToken: credentials.captchaToken }),
   });
 
   const data = await response.json();

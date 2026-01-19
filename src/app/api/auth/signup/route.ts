@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validationResult.data;
+    const { email, password, captchaToken } = validationResult.data;
 
     // Step 2: Get client IP for rate limiting
     const clientIp = getClientIp(request);
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       options: {
         // You can add email redirect URL here for email confirmation
         // emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
-        
+        captchaToken,
         // Optional: Add user metadata
         data: {
           // Add any additional user data here

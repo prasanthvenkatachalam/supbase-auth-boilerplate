@@ -32,7 +32,10 @@
       "password_min": "Password must be at least 8 characters",
       "password_pattern": "Password requirement not met",
       "password_mismatch": "Passwords do not match",
-      "default": "An error occurred. Please try again."
+      "default": "An error occurred. Please try again.",
+      "captcha_required": "Please complete the captcha",
+      "captcha_failed": "Captcha verification failed. Please try again.",
+      "captcha_expired": "Captcha verification expired. Please try again."
     }
   }
 }
