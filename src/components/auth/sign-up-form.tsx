@@ -32,6 +32,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -42,7 +43,21 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         setSuccess(true);
       },
       onError: (error) => {
-        setServerError(error.message || t("errors.default"));
+        // Enhanced error handling for rate limiting and other errors
+        const errorMessage = error.message || t("errors.default");
+        
+        // Check if it's a rate limit error
+        if (errorMessage.includes("Too many attempts") || errorMessage.includes("Rate limit")) {
+          setServerError(errorMessage);
+        } 
+        // Check if email already exists
+        else if (errorMessage.includes("already exists")) {
+          setServerError("This email is already registered. Please use the login page.");
+        }
+        // Generic error
+        else {
+          setServerError(errorMessage);
+        }
       },
     });
   };
@@ -98,11 +113,24 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     <Label htmlFor="password">{t("password")}</Label>
                     <PasswordInput
                       id="password"
+                      placeholder="••••••••"
                       {...register("password")}
                       className={cn(errors.password && "border-destructive")}
                     />
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password.message}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirmPassword">{t("confirm_password")}</Label>
+                    <PasswordInput
+                      id="confirmPassword"
+                      placeholder="••••••••"
+                      {...register("confirmPassword")}
+                      className={cn(errors.confirmPassword && "border-destructive")}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
                     )}
                   </div>
                 </div>
