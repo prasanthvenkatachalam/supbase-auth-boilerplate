@@ -14,8 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useSignUp } from "@/hooks/api/use-auth";
 import { signUpSchema, type SignUpInput } from "@/lib/validations/auth";
 import { ROUTES } from "@/constants";
-import { CheckIcon } from "@/components/icons";
-import { Captcha } from "./turnstile";
+import { Captcha } from "@/components/auth/turnstile";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useRef } from "react";
 
