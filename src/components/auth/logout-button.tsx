@@ -15,7 +15,7 @@ export function LogoutButton() {
   const handleLogout = () => {
     signOut(undefined, {
       onSuccess: () => {
-        router.push(ROUTES.AUTH.LOGIN);
+        router.replace(ROUTES.AUTH.LOGIN);
       },
     });
   };

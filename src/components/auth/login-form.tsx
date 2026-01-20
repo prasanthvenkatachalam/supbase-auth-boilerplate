@@ -32,6 +32,7 @@ export function LoginForm({
   const t = useTranslations("auth");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isCaptchaLoading, setIsCaptchaLoading] = useState(true);
   const captchaRef = useRef<TurnstileInstance>(null);
 
   const { mutate: signIn, isPending } = useSignIn();
@@ -54,11 +55,12 @@ export function LoginForm({
     setServerError(null);
     signIn(data, {
       onSuccess: () => {
-        router.push(ROUTES.PROTECTED);
+        router.replace(ROUTES.PROTECTED);
       },
       onError: (error) => {
         captchaRef.current?.reset();
         setValue("captchaToken", "");
+        setIsCaptchaLoading(true);
         setServerError(error.message || t("errors.default"));
       },
     });
@@ -123,6 +125,7 @@ export function LoginForm({
               ref={captchaRef}
               onSuccess={(token) => {
                 setValue("captchaToken", token, { shouldValidate: true });
+                setIsCaptchaLoading(false);
                 // Clear captcha-related errors if we just got a fresh token
                 if (serverError === t("errors.captcha_expired") || serverError === t("errors.captcha_failed")) {
                   setServerError(null);
@@ -131,10 +134,12 @@ export function LoginForm({
               onExpire={() => {
                 setValue("captchaToken", "");
                 setServerError(t("errors.captcha_expired"));
+                setIsCaptchaLoading(true);
               }}
               onError={() => {
                 setServerError(t("errors.captcha_failed"));
                 setValue("captchaToken", "");
+                setIsCaptchaLoading(false);
               }}
             />
             {errors.captchaToken && (
@@ -143,7 +148,7 @@ export function LoginForm({
               </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full" disabled={isPending || isCaptchaLoading}>
               {isPending ? t("loading") : t("submit_login")}
             </Button>
           </form>

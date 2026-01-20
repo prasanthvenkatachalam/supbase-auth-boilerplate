@@ -51,7 +51,7 @@ export const signUpWithEmail = async (credentials: SignUpInput) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, password, captchaToken: credentials.captchaToken }),
+    body: JSON.stringify(credentials),
   });
 
   const data = await response.json();

@@ -13,13 +13,16 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+export default proxy;
+
 export const config = {
   matcher: [
     // Next-intl matchers
     '/', 
     '/(de|en)/:path*', 
     
-    // Supabase generic matchers (exclude static assets)
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Supabase generic matchers (exclude static assets and API routes)
+    // Adding api|auth to the excluded list
+    '/((?!api|auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

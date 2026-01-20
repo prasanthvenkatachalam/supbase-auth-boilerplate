@@ -22,6 +22,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const t = useTranslations("auth");
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isCaptchaLoading, setIsCaptchaLoading] = useState(true);
   const captchaRef = useRef<TurnstileInstance>(null);
 
   const { mutate: signUp, isPending } = useSignUp();
@@ -51,6 +52,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         // Reset captcha on error
         captchaRef.current?.reset();
         setValue("captchaToken", "");
+        setIsCaptchaLoading(true);
 
         // Enhanced error handling for rate limiting and other errors
         const errorMessage = error.message || t("errors.default");
@@ -155,6 +157,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   ref={captchaRef}
                   onSuccess={(token) => {
                     setValue("captchaToken", token, { shouldValidate: true });
+                    setIsCaptchaLoading(false);
                     // Clear captcha-related errors if we just got a fresh token
                     if (serverError === t("errors.captcha_expired") || serverError === t("errors.captcha_failed")) {
                       setServerError(null);
@@ -163,10 +166,12 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onExpire={() => {
                     setValue("captchaToken", "");
                     setServerError(t("errors.captcha_expired"));
+                    setIsCaptchaLoading(true);
                   }}
                   onError={() => {
                     setServerError(t("errors.captcha_failed"));
                     setValue("captchaToken", "");
+                    setIsCaptchaLoading(false);
                   }}
                 />
                 {errors.captchaToken && (
@@ -175,7 +180,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   </p>
                 )}
 
-                <Button type="submit" className="w-full" disabled={isPending}>
+                <Button type="submit" className="w-full" disabled={isPending || isCaptchaLoading}>
                   {isPending ? t("loading") : t("submit_signup")}
                 </Button>
               </form>

@@ -3,6 +3,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import QueryProvider from "@/components/providers/query-provider";
+import AuthProvider from "@/components/providers/auth-provider";
 
 export default async function LocaleLayout({
   children,
@@ -24,7 +25,9 @@ export default async function LocaleLayout({
 
   return (
     <QueryProvider>
-      <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      <NextIntlClientProvider messages={messages}>
+        <AuthProvider>{children}</AuthProvider>
+      </NextIntlClientProvider>
     </QueryProvider>
   );
 }
