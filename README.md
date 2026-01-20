@@ -10,8 +10,11 @@ A modern, production-ready boilerplate built with **Next.js 16 (App Router)** an
 
 ## 🚀 Features
 
-- **Next.js 16 (App Router)**: Utilizing the latest React Server Components and routing capabilities.
+- **Next.js 16 (App Router)**: Utilizing the latest React Server Components and routing capabilities with the new `proxy.ts` convention.
 - **Supabase Authentication**: Secure and scalable user authentication and database.
+- **Upstash Rate Limiting**: Multi-layer protection (IP, Email, and Global) using Upstash Redis.
+- **Cloudflare Turnstile**: Bot protection using the latest non-interactive captcha.
+- **Global Auth Sync**: Real-time session synchronization across multiple browser tabs.
 - **TypeScript**: Fully typed codebase for better developer experience and code quality.
 - **Tailwind CSS 4**: The latest utility-first CSS framework for rapid and responsive UI development.
 - **TanStack Query v5**: Powerful asynchronous state management for data fetching.
@@ -24,6 +27,8 @@ A modern, production-ready boilerplate built with **Next.js 16 (App Router)** an
 
 - **Framework**: [Next.js](https://nextjs.org/)
 - **Database & Auth**: [Supabase](https://supabase.com/)
+- **Rate Limiting**: [Upstash Redis](https://upstash.com/)
+- **Bot Protection**: [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **State Management**: [TanStack Query](https://tanstack.com/query/latest)
@@ -68,6 +73,14 @@ Follow these steps to set up the project locally.
     ```bash
     NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    
+    # Upstash Redis (for rate limiting)
+    UPSTASH_REDIS_REST_URL=your_upstash_url
+    UPSTASH_REDIS_REST_TOKEN=your_upstash_token
+    
+    # Cloudflare Turnstile
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_site_key
+    TURNSTILE_SECRET_KEY=your_secret_key
     ```
 
     > **Note:** You can find these keys in your Supabase project settings under **Project Settings > API**.
@@ -99,7 +112,7 @@ src/
 ├── services/         # API services and data fetching logic
 ├── styles/           # Global styles
 ├── utils/            # Helper functions (e.g., Supabase client)
-└── middleware.ts     # Next.js middleware (Auth protection)
+└── proxy.ts          # Next.js Proxy/Middleware (Auth protection & i18n)
 ```
 
 ## 🤝 Contributing
