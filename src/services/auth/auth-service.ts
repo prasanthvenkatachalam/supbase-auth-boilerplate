@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/client";
 import { 
   loginSchema, 
-  signUpSchema, 
+  signUpSchema,
   forgotPasswordSchema, 
   type LoginInput, 
   type SignUpInput, 

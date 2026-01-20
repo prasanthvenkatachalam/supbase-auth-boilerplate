@@ -1,16 +1,17 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address").trim().toLowerCase(),
   password: z.string().min(1, "Password is required"),
   captchaToken: z.string().min(1, "Please complete the captcha"),
 });
 
 export const signUpSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address").trim().toLowerCase(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
+    .max(100, "Password must be less than 100 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
@@ -22,13 +23,14 @@ export const signUpSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.email("Invalid email address").trim().toLowerCase(),
 });
 
 export const updatePasswordSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
+    .max(100, "Password must be less than 100 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one number"),
