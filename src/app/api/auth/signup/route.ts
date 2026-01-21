@@ -23,6 +23,8 @@ import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants/messages";
 import { RATE_LIMIT_CONFIG } from "@/constants/rate-limit";
 import { z } from "zod";
 
+export const runtime = 'edge';
+
 /**
  * Helper function to extract client IP address
  * 
@@ -97,17 +99,19 @@ export async function POST(request: NextRequest) {
     const clientIp = getClientIp(request);
 
     // Step 3: Check rate limits (multi-layer)
+    console.time("rate-limit-check");
     const rateLimitResult = await checkSignupRateLimit(clientIp, email);
+    console.timeEnd("rate-limit-check");
 
     if (!rateLimitResult.allowed) {
       // Rate limit exceeded - return 429 with retry information
       const resetDate = rateLimitResult.resetAt;
       const retryAfterSeconds = resetDate
         ? Math.ceil((resetDate.getTime() - Date.now()) / 1000)
-        : 900; // Default to 15 minutes
+        : 900;
 
-      // Return different messages based on which limit was hit
-      const messages = {
+      const limitType = rateLimitResult.limitType || "global";
+      const messageMap: Record<string, string> = {
         global: ERROR_MESSAGES.RATE_LIMIT.GLOBAL,
         ip: ERROR_MESSAGES.RATE_LIMIT.IP,
         email: ERROR_MESSAGES.RATE_LIMIT.EMAIL,
@@ -116,7 +120,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: ERROR_MESSAGES.RATE_LIMIT.GENERIC,
-          message: messages[rateLimitResult.limitType || "global"],
+          message: messageMap[limitType],
           retryAfter: retryAfterSeconds,
           limit: rateLimitResult.limit,
           remaining: rateLimitResult.remaining,
@@ -134,23 +138,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Create Supabase client (server-side)
+    console.time("supabase-init");
     const supabase = await createClient();
+    console.timeEnd("supabase-init");
 
     // Step 5: Attempt to sign up the user
+    console.time("supabase-signup");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // You can add email redirect URL here for email confirmation
-        // emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
         captchaToken,
-        // Optional: Add user metadata
-        data: {
-          // Add any additional user data here
-          // This will be stored in auth.users.raw_user_meta_data
-        },
       },
     });
+    console.timeEnd("supabase-signup");
 
     // Step 6: Handle Supabase errors
     if (error) {

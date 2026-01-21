@@ -48,75 +48,35 @@ export const ipRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.SIGNUP.IP.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.IP.WINDOW as Duration
   ),
-  analytics: true, // Track rate limit metrics
+  analytics: false, // Disabled for performance - saves RTT
   prefix: RATE_LIMIT_CONFIG.SIGNUP.IP.PREFIX,
 });
 
-/**
- * Email-based rate limiter
- * 
- * Configuration:
- * - 5 attempts per hour per email
- * - Prevents someone from repeatedly trying to sign up with the same email
- * - Useful to detect account enumeration attacks
- * 
- * Why these limits?
- * - 5 attempts: More lenient than IP (user might try from different devices)
- * - 1 hour: Prevents rapid automated account creation
- */
 export const emailRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.SIGNUP.EMAIL.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.EMAIL.WINDOW as Duration
   ),
-  analytics: true,
+  analytics: false, // Disabled for performance
   prefix: RATE_LIMIT_CONFIG.SIGNUP.EMAIL.PREFIX,
 });
 
-/**
- * Global rate limiter for all signup attempts
- * 
- * Configuration:
- * - 100 signups per minute across entire application
- * - Last line of defense against DDoS attacks
- * - Protects database and email service from overload
- * 
- * This is a shared limit across all users, so it should be generous
- */
 export const globalSignupRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.WINDOW as Duration
   ),
-  analytics: true,
+  analytics: false, // Disabled for performance
   prefix: RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.PREFIX,
 });
 
 /**
- * Rate limit response type
- * Contains all information needed to handle rate limiting in API routes
- */
-export interface RateLimitResult {
-  success: boolean;
-  limit: number;
-  remaining: number;
-  reset: number; // Timestamp when the limit resets
-  pending: Promise<unknown>; // Internal promise, can be ignored
-}
-
-/**
  * Multi-layer rate limit checker for signup
  * 
- * Checks three layers in sequence:
- * 1. Global limit (fastest check, protects system)
- * 2. IP limit (prevents single-source abuse)
- * 3. Email limit (prevents account-specific abuse)
- * 
- * @param ip - Client IP address
- * @param email - Email being registered
- * @returns Object with rate limit results and which limit was hit
+ * Optimized to check all layers in parallel to minimize latency.
+ * Each check is a separate HTTP call to Upstash Redis.
  */
 export async function checkSignupRateLimit(
   ip: string,
@@ -129,8 +89,15 @@ export async function checkSignupRateLimit(
   resetAt?: Date;
 }> {
   try {
-    // Layer 1: Check global rate limit first (cheapest check)
-    const globalResult = await globalSignupRateLimiter.limit("global");
+    // Check all layers in parallel to save multiple Round Trip Times (RTT)
+    // This is significantly faster than sequential awaits
+    const [globalResult, ipResult, emailResult] = await Promise.all([
+      globalSignupRateLimiter.limit("global"),
+      ipRateLimiter.limit(ip),
+      emailRateLimiter.limit(email.toLowerCase()),
+    ]);
+
+    // Priority 1: Global limit check
     if (!globalResult.success) {
       return {
         allowed: false,
@@ -141,8 +108,7 @@ export async function checkSignupRateLimit(
       };
     }
 
-    // Layer 2: Check IP-based rate limit
-    const ipResult = await ipRateLimiter.limit(ip);
+    // Priority 2: IP limit check
     if (!ipResult.success) {
       return {
         allowed: false,
@@ -153,8 +119,7 @@ export async function checkSignupRateLimit(
       };
     }
 
-    // Layer 3: Check email-based rate limit
-    const emailResult = await emailRateLimiter.limit(email.toLowerCase());
+    // Priority 3: Email limit check
     if (!emailResult.success) {
       return {
         allowed: false,
@@ -165,21 +130,26 @@ export async function checkSignupRateLimit(
       };
     }
 
-    // All checks passed
+    // All checks passed. Return the combined status
+    // Use the most restrictive "remaining" count as a guide
+    const remaining = Math.min(
+      globalResult.remaining,
+      ipResult.remaining,
+      emailResult.remaining
+    );
+
+    // Return current limit and reset from the most relevant limiter (IP)
     return {
       allowed: true,
-      remaining: Math.min(
-        globalResult.remaining,
-        ipResult.remaining,
-        emailResult.remaining
-      ),
+      limit: ipResult.limit,
+      remaining,
+      resetAt: new Date(ipResult.reset),
     };
   } catch (error) {
-    // If Redis is down, fail open (allow request) to maintain availability
-    // Log the error for monitoring
+    // Fail open - maintain availability
     console.error("Rate limit check failed:", error);
     return {
-      allowed: true, // Fail open - availability over security in this case
+      allowed: true,
     };
   }
 }
@@ -216,7 +186,7 @@ export const ipLoginRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.LOGIN.IP.LIMIT,
     RATE_LIMIT_CONFIG.LOGIN.IP.WINDOW as Duration
   ),
-  analytics: true,
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.IP.PREFIX,
 });
 
@@ -226,7 +196,7 @@ export const emailLoginRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.LOGIN.EMAIL.LIMIT,
     RATE_LIMIT_CONFIG.LOGIN.EMAIL.WINDOW as Duration
   ),
-  analytics: true,
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.EMAIL.PREFIX,
 });
 
@@ -236,12 +206,14 @@ export const globalLoginRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.LOGIN.GLOBAL.LIMIT,
     RATE_LIMIT_CONFIG.LOGIN.GLOBAL.WINDOW as Duration
   ),
-  analytics: true,
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.GLOBAL.PREFIX,
 });
 
 /**
  * Check rate limits for login
+ * 
+ * Parallelized for performance.
  * 
  * @param ip - Client IP
  * @param email - User email
@@ -257,8 +229,12 @@ export async function checkLoginRateLimit(
   resetAt?: Date;
 }> {
   try {
-    // Layer 1: Global
-    const globalResult = await globalLoginRateLimiter.limit("global");
+    const [globalResult, ipResult, emailResult] = await Promise.all([
+      globalLoginRateLimiter.limit("global"),
+      ipLoginRateLimiter.limit(ip),
+      emailLoginRateLimiter.limit(email.toLowerCase()),
+    ]);
+
     if (!globalResult.success) {
       return {
         allowed: false,
@@ -269,8 +245,6 @@ export async function checkLoginRateLimit(
       };
     }
 
-    // Layer 2: IP
-    const ipResult = await ipLoginRateLimiter.limit(ip);
     if (!ipResult.success) {
       return {
         allowed: false,
@@ -281,8 +255,6 @@ export async function checkLoginRateLimit(
       };
     }
 
-    // Layer 3: Email
-    const emailResult = await emailLoginRateLimiter.limit(email.toLowerCase());
     if (!emailResult.success) {
       return {
         allowed: false,
