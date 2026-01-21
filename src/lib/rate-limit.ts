@@ -9,7 +9,7 @@
  * 3. Global limiting: Protects overall system resources
  */
 
-import { Ratelimit } from "@upstash/ratelimit";
+import { Ratelimit, type Duration } from "@upstash/ratelimit";
 import { redis } from "@/lib/upstash";
 import { RATE_LIMIT_CONFIG } from "@/constants/rate-limit";
 
@@ -46,7 +46,7 @@ export const ipRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.SIGNUP.IP.LIMIT,
-    RATE_LIMIT_CONFIG.SIGNUP.IP.WINDOW as any
+    RATE_LIMIT_CONFIG.SIGNUP.IP.WINDOW as Duration
   ),
   analytics: true, // Track rate limit metrics
   prefix: RATE_LIMIT_CONFIG.SIGNUP.IP.PREFIX,
@@ -68,7 +68,7 @@ export const emailRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.SIGNUP.EMAIL.LIMIT,
-    RATE_LIMIT_CONFIG.SIGNUP.EMAIL.WINDOW as any
+    RATE_LIMIT_CONFIG.SIGNUP.EMAIL.WINDOW as Duration
   ),
   analytics: true,
   prefix: RATE_LIMIT_CONFIG.SIGNUP.EMAIL.PREFIX,
@@ -88,7 +88,7 @@ export const globalSignupRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.LIMIT,
-    RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.WINDOW as any
+    RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.WINDOW as Duration
   ),
   analytics: true,
   prefix: RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.PREFIX,
@@ -214,7 +214,7 @@ export const ipLoginRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.LOGIN.IP.LIMIT,
-    RATE_LIMIT_CONFIG.LOGIN.IP.WINDOW as any
+    RATE_LIMIT_CONFIG.LOGIN.IP.WINDOW as Duration
   ),
   analytics: true,
   prefix: RATE_LIMIT_CONFIG.LOGIN.IP.PREFIX,
@@ -224,7 +224,7 @@ export const emailLoginRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.LOGIN.EMAIL.LIMIT,
-    RATE_LIMIT_CONFIG.LOGIN.EMAIL.WINDOW as any
+    RATE_LIMIT_CONFIG.LOGIN.EMAIL.WINDOW as Duration
   ),
   analytics: true,
   prefix: RATE_LIMIT_CONFIG.LOGIN.EMAIL.PREFIX,
@@ -234,7 +234,7 @@ export const globalLoginRateLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(
     RATE_LIMIT_CONFIG.LOGIN.GLOBAL.LIMIT,
-    RATE_LIMIT_CONFIG.LOGIN.GLOBAL.WINDOW as any
+    RATE_LIMIT_CONFIG.LOGIN.GLOBAL.WINDOW as Duration
   ),
   analytics: true,
   prefix: RATE_LIMIT_CONFIG.LOGIN.GLOBAL.PREFIX,
