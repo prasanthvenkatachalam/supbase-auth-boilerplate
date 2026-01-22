@@ -23,6 +23,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isCaptchaLoading, setIsCaptchaLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const captchaRef = useRef<TurnstileInstance>(null);
 
   const { mutate: signUp, isPending } = useSignUp();
@@ -44,6 +46,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
   const onSubmit = (data: SignUpInput) => {
     setServerError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     signUp(data, {
       onSuccess: () => {
         setSuccess(true);
@@ -116,6 +120,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       placeholder="m@example.com"
                       {...register("email")}
                       className={cn(errors.email && "border-destructive")}
+                      disabled={isPending}
                     />
                     {errors.email && (
                       <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -128,6 +133,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       placeholder="••••••••"
                       {...register("password")}
                       className={cn(errors.password && "border-destructive")}
+                      isVisible={showPassword}
+                      onVisibilityChange={setShowPassword}
+                      disabled={isPending}
                     />
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -140,6 +148,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       placeholder="••••••••"
                       {...register("confirmPassword")}
                       className={cn(errors.confirmPassword && "border-destructive")}
+                      isVisible={showConfirmPassword}
+                      onVisibilityChange={setShowConfirmPassword}
+                      disabled={isPending}
                     />
                     {errors.confirmPassword && (
                       <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
@@ -188,6 +199,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 {t("has_account")}{" "}
                 <Link
                   href={ROUTES.AUTH.LOGIN}
+                  prefetch={false}
                   className="text-primary hover:underline underline-offset-4 font-medium"
                 >
                   {t("login")}

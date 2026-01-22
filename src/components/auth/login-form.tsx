@@ -33,6 +33,7 @@ export function LoginForm({
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isCaptchaLoading, setIsCaptchaLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const captchaRef = useRef<TurnstileInstance>(null);
 
   const { mutate: signIn, isPending } = useSignIn();
@@ -53,6 +54,7 @@ export function LoginForm({
 
   const onSubmit = (data: LoginInput) => {
     setServerError(null);
+    setShowPassword(false);
     signIn(data, {
       onSuccess: () => {
         router.replace(ROUTES.PROTECTED);
@@ -85,6 +87,7 @@ export function LoginForm({
                   placeholder="m@example.com"
                   {...register("email")}
                   className={cn(errors.email && "border-destructive")}
+                  disabled={isPending}
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">
@@ -97,6 +100,7 @@ export function LoginForm({
                   <Label htmlFor="password">{t("password")}</Label>
                   <Link
                     href={ROUTES.AUTH.FORGOT_PASSWORD}
+                    prefetch={false}
                     className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
                   >
                     {t("forgot_password")}
@@ -106,6 +110,9 @@ export function LoginForm({
                   id="password"
                   {...register("password")}
                   className={cn(errors.password && "border-destructive")}
+                  isVisible={showPassword}
+                  onVisibilityChange={setShowPassword}
+                  disabled={isPending}
                 />
                 {errors.password && (
                   <p className="text-sm text-destructive">
@@ -156,6 +163,7 @@ export function LoginForm({
             {t("no_account")}{" "}
             <Link
               href={ROUTES.AUTH.SIGN_UP}
+              prefetch={false}
               className="text-primary hover:underline underline-offset-4 font-medium"
             >
               {t("signup")}

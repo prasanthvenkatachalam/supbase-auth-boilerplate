@@ -14,14 +14,16 @@
  * - Follows REST conventions (POST for creation, proper status codes)
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { signUpSchema } from "@/lib/validations/auth";
 import { checkSignupRateLimit } from "@/lib/rate-limit";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants/messages";
 import { RATE_LIMIT_CONFIG } from "@/constants/rate-limit";
-import { z } from "zod";
+import { sendEmail } from "@/lib/mail";
+
+import { supabaseAdmin } from "@/utils/supabase/admin";
+
+export const runtime = 'nodejs';
 
 /**
  * Helper function to extract client IP address
@@ -74,11 +76,16 @@ function getClientIp(request: NextRequest): string {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Step 1: Parse and validate request body
-    const body = await request.json();
+    // Step 1: Start async tasks immediately (Parallel Execution)
+    // Kick off body parsing
+    const bodyPromise = request.json();
     
-    // Validate input using Zod schema
-    // This ensures email format is correct and password meets requirements
+    // Step 2: Get client IP (Sync)
+    const clientIp = getClientIp(request);
+
+    // Step 3: Await Body & Validate
+    const body = await bodyPromise;
+    
     const validationResult = signUpSchema.safeParse(body);
     
     if (!validationResult.success) {
@@ -91,23 +98,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, captchaToken } = validationResult.data;
+    const { email, password } = validationResult.data;
 
-    // Step 2: Get client IP for rate limiting
-    const clientIp = getClientIp(request);
-
-    // Step 3: Check rate limits (multi-layer)
+    // Step 4: Start Rate Limit Check
+    console.time("rate-limit-check");
     const rateLimitResult = await checkSignupRateLimit(clientIp, email);
+    console.timeEnd("rate-limit-check");
 
     if (!rateLimitResult.allowed) {
       // Rate limit exceeded - return 429 with retry information
       const resetDate = rateLimitResult.resetAt;
       const retryAfterSeconds = resetDate
         ? Math.ceil((resetDate.getTime() - Date.now()) / 1000)
-        : 900; // Default to 15 minutes
+        : 900;
 
-      // Return different messages based on which limit was hit
-      const messages = {
+      const limitType = rateLimitResult.limitType || "global";
+      const messageMap: Record<string, string> = {
         global: ERROR_MESSAGES.RATE_LIMIT.GLOBAL,
         ip: ERROR_MESSAGES.RATE_LIMIT.IP,
         email: ERROR_MESSAGES.RATE_LIMIT.EMAIL,
@@ -116,7 +122,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: ERROR_MESSAGES.RATE_LIMIT.GENERIC,
-          message: messages[rateLimitResult.limitType || "global"],
+          message: messageMap[limitType],
           retryAfter: retryAfterSeconds,
           limit: rateLimitResult.limit,
           remaining: rateLimitResult.remaining,
@@ -133,74 +139,81 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 4: Create Supabase client (server-side)
-    const supabase = await createClient();
-
-    // Step 5: Attempt to sign up the user
-    const { data, error } = await supabase.auth.signUp({
+    // Step 5: Fast Signup (Non-blocking Email)
+    console.time("admin-generate-link");
+    const { data: adminData, error: adminError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "signup",
       email,
       password,
       options: {
-        // You can add email redirect URL here for email confirmation
-        // emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
-        captchaToken,
-        // Optional: Add user metadata
         data: {
-          // Add any additional user data here
-          // This will be stored in auth.users.raw_user_meta_data
+          // You can add additional metadata here
         },
       },
     });
+    console.timeEnd("admin-generate-link");
 
-    // Step 6: Handle Supabase errors
-    if (error) {
-      // Check for specific error types
-      if (error.message.includes("already registered")) {
-        return NextResponse.json(
-          {
-            error: "Conflict",
-            message: ERROR_MESSAGES.AUTH.EMAIL_EXISTS,
-          },
-          { status: 409 } // Conflict status
-        );
-      }
-
-      // Check for weak password
-      if (error.message.includes("Password")) {
-        return NextResponse.json(
-          {
-            error: ERROR_MESSAGES.VALIDATION.INVALID_INPUT,
-            message: error.message,
-          },
-          { status: 400 }
-        );
-      }
-
-      // Generic error
-      console.error("Signup error:", error);
-      return NextResponse.json(
-        {
-          error: ERROR_MESSAGES.AUTH.SIGNUP_FAILED,
-          message: error.message,
-        },
-        { status: 500 }
-      );
+    if (adminError) {
+       if (adminError.message.includes("already registered")) {
+          return NextResponse.json(
+            { error: "Conflict", message: ERROR_MESSAGES.AUTH.EMAIL_EXISTS },
+            { status: 409 }
+          );
+       }
+       console.error("Generate link error:", adminError);
+       return NextResponse.json(
+         { error: ERROR_MESSAGES.AUTH.SIGNUP_FAILED, message: adminError.message },
+         { status: 500 }
+       );
     }
 
-    // Step 7: Success! Return user data
-    // Note: The profile is automatically created by the database trigger
+    // Step 6: Background Email Sending (Zepto Mail)
+    after(async () => {
+      const verificationLink = adminData.properties?.action_link;
+      if (!verificationLink) {
+        console.error("[Background] Failed to generate verification link for", email);
+        return;
+      }
+
+      console.time(`email-send-${email}`);
+      const emailResult = await sendEmail({
+        to: email,
+        subject: "Verify your email address",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #333;">Welcome to our platform!</h2>
+            <p>Please click the button below to verify your email address and complete your registration.</p>
+            <div style="margin: 30px 0;">
+              <a href="${verificationLink}" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email Address</a>
+            </div>
+            <p style="color: #666; font-size: 14px;">If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p style="color: #666; font-size: 14px; word-break: break-all;">${verificationLink}</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">If you didn't create an account, you can safely ignore this email.</p>
+          </div>
+        `,
+      });
+      console.timeEnd(`email-send-${email}`);
+
+      if (!emailResult.success) {
+        console.error("[Background] Failed to send verification email to", email, emailResult.error);
+      } else {
+        console.log("[Background] Verification email sent successfully to", email);
+      }
+    });
+
+    // Step 7: Immediate Success Response
     return NextResponse.json(
       {
         success: true,
         message: SUCCESS_MESSAGES.SIGNUP.CREATED,
         user: {
-          id: data.user?.id,
-          email: data.user?.email,
+          id: adminData.user?.id,
+          email: adminData.user?.email,
         },
-        // Include rate limit info in response headers for client-side tracking
       },
       {
-        status: 201, // Created
+        status: 201,
         headers: {
           "X-RateLimit-Limit": rateLimitResult.limit?.toString() || "0",
           "X-RateLimit-Remaining": rateLimitResult.remaining?.toString() || "0",

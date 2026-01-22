@@ -8,20 +8,32 @@ import { Button } from "@/components/ui/button";
 
 export interface PasswordInputProps extends Omit<React.ComponentProps<"input">, "type"> {
   showPasswordToggle?: boolean;
+  isVisible?: boolean;
+  onVisibilityChange?: (visible: boolean) => void;
 }
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, showPasswordToggle = true, ...props }, ref) => {
-    const [showPassword, setShowPassword] = React.useState(false);
+  ({ className, showPasswordToggle = true, isVisible: controlledVisible, onVisibilityChange, ...props }, ref) => {
+    const [internalShowPassword, setInternalShowPassword] = React.useState(false);
+
+    const isControlled = controlledVisible !== undefined;
+    const showPassword = isControlled ? controlledVisible : internalShowPassword;
 
     const togglePasswordVisibility = () => {
-      setShowPassword((prev) => !prev);
+      const nextVisible = !showPassword;
+      if (!isControlled) {
+        setInternalShowPassword(nextVisible);
+      }
+      onVisibilityChange?.(nextVisible);
     };
+
+    // Use password type if disabled or if showPassword is false
+    const type = showPassword && !props.disabled ? "text" : "password";
 
     return (
       <div className="relative">
         <Input
-          type={showPassword ? "text" : "password"}
+          type={type}
           className={cn("pr-10", className)}
           ref={ref}
           {...props}
@@ -32,10 +44,11 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
             variant="ghost"
             size="icon-sm"
             onClick={togglePasswordVisibility}
+            disabled={props.disabled}
             className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword && !props.disabled ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         )}
       </div>

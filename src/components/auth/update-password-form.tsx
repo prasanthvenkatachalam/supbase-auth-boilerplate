@@ -19,6 +19,8 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
   const t = useTranslations("auth");
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { mutate: updatePassword, isPending } = useUpdatePassword();
 
@@ -36,6 +38,8 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
 
   const onSubmit = (data: UpdatePasswordInput) => {
     setServerError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     updatePassword(data, {
       onSuccess: () => {
         router.push(ROUTES.PROTECTED);
@@ -62,6 +66,9 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
                   id="password"
                   {...register("password")}
                   className={cn(errors.password && "border-destructive")}
+                  isVisible={showPassword}
+                  onVisibilityChange={setShowPassword}
+                  disabled={isPending}
                 />
                 {errors.password && (
                   <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -73,6 +80,9 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
                   id="confirmPassword"
                   {...register("confirmPassword")}
                   className={cn(errors.confirmPassword && "border-destructive")}
+                  isVisible={showConfirmPassword}
+                  onVisibilityChange={setShowConfirmPassword}
+                  disabled={isPending}
                 />
                 {errors.confirmPassword && (
                   <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>

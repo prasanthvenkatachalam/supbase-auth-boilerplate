@@ -65,7 +65,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
         <CardContent>
           {success ? (
             <Button asChild className="w-full mt-4">
-              <Link href={ROUTES.AUTH.LOGIN}>{t("back_to_login")}</Link>
+              <Link href={ROUTES.AUTH.LOGIN} prefetch={false}>{t("back_to_login")}</Link>
             </Button>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -78,6 +78,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
                     placeholder="m@example.com"
                     {...register("email")}
                     className={cn(errors.email && "border-destructive")}
+                    disabled={isPending}
                   />
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -98,6 +99,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
               <div className="mt-4 text-center text-sm">
                 <Link
                   href={ROUTES.AUTH.LOGIN}
+                  prefetch={false}
                   className="text-primary hover:underline underline-offset-4"
                 >
                   {t("back_to_login")}
