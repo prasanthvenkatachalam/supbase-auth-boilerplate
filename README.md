@@ -129,6 +129,7 @@ src/
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+**Note:** All Pull Requests will be reviewed and merged by the project maintainers. Public contributors are encouraged to raise PRs, but merging is restricted to repository administrators.
 
 1.  Fork the project
 2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
