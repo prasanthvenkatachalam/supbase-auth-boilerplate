@@ -20,10 +20,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-right"
       toastOptions={{
         classNames: {
-          success: "bg-[#04b34f] text-[#000000] border-[#04b34f]",
-          error: "bg-[#a6192e] text-[#ffffff] border-[#a6192e]",
-          warning: "bg-[#ff9900] text-[#000000] border-[#ff9900]",
-          info: "bg-[#0057b8] text-[#ffffff] border-[#0057b8]",
+          toast:
+            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg data-[type=success]:!bg-[#04b34f] data-[type=success]:!text-[#000000] data-[type=success]:!border-[#04b34f] data-[type=error]:!bg-[#a6192e] data-[type=error]:!text-[#ffffff] data-[type=error]:!border-[#a6192e] data-[type=warning]:!bg-[#ff9900] data-[type=warning]:!text-[#000000] data-[type=warning]:!border-[#ff9900] data-[type=info]:!bg-[#0057b8] data-[type=info]:!text-[#ffffff] data-[type=info]:!border-[#0057b8]",
+          description:
+            "group-[.toast]:text-muted-foreground group-data-[type=success]:!text-[#000000] group-data-[type=error]:!text-[#ffffff] group-data-[type=warning]:!text-[#000000] group-data-[type=info]:!text-[#ffffff]",
+          actionButton:
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          cancelButton:
+            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
       }}
       icons={{
