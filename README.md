@@ -14,6 +14,7 @@ A modern, production-ready boilerplate built with **Next.js 16 (App Router)** an
 - **Supabase Authentication**: Secure and scalable user authentication and database.
 - **Upstash Rate Limiting**: Multi-layer protection (IP, Email, and Global) using Upstash Redis.
 - **Cloudflare Turnstile**: Bot protection using the latest non-interactive captcha.
+- **ZeptoMail**: Reliable transactional email delivery service.
 - **Global Auth Sync**: Real-time session synchronization across multiple browser tabs.
 - **TypeScript**: Fully typed codebase for better developer experience and code quality.
 - **Tailwind CSS 4**: The latest utility-first CSS framework for rapid and responsive UI development.
@@ -29,6 +30,7 @@ A modern, production-ready boilerplate built with **Next.js 16 (App Router)** an
 - **Database & Auth**: [Supabase](https://supabase.com/)
 - **Rate Limiting**: [Upstash Redis](https://upstash.com/)
 - **Bot Protection**: [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/)
+- **Email**: [ZeptoMail](https://www.zoho.com/zeptomail/)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **State Management**: [TanStack Query](https://tanstack.com/query/latest)
@@ -71,16 +73,25 @@ Follow these steps to set up the project locally.
     Create a `.env.local` file in the root directory and add your Supabase credentials:
 
     ```bash
+    # Supabase
     NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
     NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-    
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
     # Upstash Redis (for rate limiting)
     UPSTASH_REDIS_REST_URL=your_upstash_url
     UPSTASH_REDIS_REST_TOKEN=your_upstash_token
-    
+
     # Cloudflare Turnstile
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY=your_site_key
+    NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_site_key
     TURNSTILE_SECRET_KEY=your_secret_key
+
+    # ZeptoMail (for emails)
+    ZEPTOMAIL_URL=api.zeptomail.in/
+    ZEPTOMAIL_TOKEN=your_zeptomail_token
+    EMAIL_RECIPIENT=your_recipient_email
+    EMAIL_SENDER_ADDRESS=your_sender_address
+    EMAIL_SENDER_NAME=your_sender_name
     ```
 
     > **Note:** You can find these keys in your Supabase project settings under **Project Settings > API**.
