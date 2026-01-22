@@ -97,6 +97,7 @@ export function LoginForm({
                   <Label htmlFor="password">{t("password")}</Label>
                   <Link
                     href={ROUTES.AUTH.FORGOT_PASSWORD}
+                    prefetch={false}
                     className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
                   >
                     {t("forgot_password")}
@@ -156,6 +157,7 @@ export function LoginForm({
             {t("no_account")}{" "}
             <Link
               href={ROUTES.AUTH.SIGN_UP}
+              prefetch={false}
               className="text-primary hover:underline underline-offset-4 font-medium"
             >
               {t("signup")}

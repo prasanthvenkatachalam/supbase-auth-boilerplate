@@ -18,10 +18,9 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         if (event === 'SIGNED_OUT') {
           // If the user logs out in any tab, redirect this tab to the login page
           router.replace(ROUTES.AUTH.LOGIN);
-          router.refresh();
         } else if (event === 'SIGNED_IN') {
-          // Sync state if needed
-          router.refresh();
+          // Refresh is often redundant if the login page redirects on its own
+          // router.refresh();
         }
       }
     );

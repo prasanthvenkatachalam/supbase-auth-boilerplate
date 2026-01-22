@@ -188,6 +188,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 {t("has_account")}{" "}
                 <Link
                   href={ROUTES.AUTH.LOGIN}
+                  prefetch={false}
                   className="text-primary hover:underline underline-offset-4 font-medium"
                 >
                   {t("login")}

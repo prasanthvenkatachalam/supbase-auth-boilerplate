@@ -76,11 +76,18 @@ function getClientIp(request: NextRequest): string {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Step 1: Parse and validate request body
-    const body = await request.json();
+    // Step 1: Start async tasks immediately (Parallel Execution)
+    // Kick off Supabase client creation (waits for cookies)
+    const supabasePromise = createClient();
+    // Kick off body parsing
+    const bodyPromise = request.json();
     
-    // Validate input using Zod schema
-    // This ensures email format is correct and password meets requirements
+    // Step 2: Get client IP (Sync)
+    const clientIp = getClientIp(request);
+
+    // Step 3: Await Body & Validate
+    const body = await bodyPromise;
+    
     const validationResult = signUpSchema.safeParse(body);
     
     if (!validationResult.success) {
@@ -95,12 +102,15 @@ export async function POST(request: NextRequest) {
 
     const { email, password, captchaToken } = validationResult.data;
 
-    // Step 2: Get client IP for rate limiting
-    const clientIp = getClientIp(request);
-
-    // Step 3: Check rate limits (multi-layer)
+    // Step 4: Start Rate Limit Check (Parallel with Supabase setup)
     console.time("rate-limit-check");
-    const rateLimitResult = await checkSignupRateLimit(clientIp, email);
+    const rateLimitPromise = checkSignupRateLimit(clientIp, email);
+    
+    // Await Supabase Client (should be ready by now)
+    const supabase = await supabasePromise;
+
+    // Await Rate Limit Result
+    const rateLimitResult = await rateLimitPromise;
     console.timeEnd("rate-limit-check");
 
     if (!rateLimitResult.allowed) {
@@ -136,11 +146,6 @@ export async function POST(request: NextRequest) {
         }
       );
     }
-
-    // Step 4: Create Supabase client (server-side)
-    console.time("supabase-init");
-    const supabase = await createClient();
-    console.timeEnd("supabase-init");
 
     // Step 5: Attempt to sign up the user
     console.time("supabase-signup");
