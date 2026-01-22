@@ -48,8 +48,9 @@ export const ipRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.SIGNUP.IP.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.IP.WINDOW as Duration
   ),
-  analytics: false, // Disabled for performance - saves RTT
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.SIGNUP.IP.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 export const emailRateLimiter = new Ratelimit({
@@ -58,8 +59,9 @@ export const emailRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.SIGNUP.EMAIL.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.EMAIL.WINDOW as Duration
   ),
-  analytics: false, // Disabled for performance
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.SIGNUP.EMAIL.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 export const globalSignupRateLimiter = new Ratelimit({
@@ -68,8 +70,9 @@ export const globalSignupRateLimiter = new Ratelimit({
     RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.LIMIT,
     RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.WINDOW as Duration
   ),
-  analytics: false, // Disabled for performance
+  analytics: false,
   prefix: RATE_LIMIT_CONFIG.SIGNUP.GLOBAL.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 /**
@@ -188,6 +191,7 @@ export const ipLoginRateLimiter = new Ratelimit({
   ),
   analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.IP.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 export const emailLoginRateLimiter = new Ratelimit({
@@ -198,6 +202,7 @@ export const emailLoginRateLimiter = new Ratelimit({
   ),
   analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.EMAIL.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 export const globalLoginRateLimiter = new Ratelimit({
@@ -208,6 +213,7 @@ export const globalLoginRateLimiter = new Ratelimit({
   ),
   analytics: false,
   prefix: RATE_LIMIT_CONFIG.LOGIN.GLOBAL.PREFIX,
+  ephemeralCache: new Map(),
 });
 
 /**
