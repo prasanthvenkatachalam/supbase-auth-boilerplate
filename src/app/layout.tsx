@@ -1,5 +1,6 @@
 import { DM_Sans } from "next/font/google";
 import "../styles/globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html suppressHydrationWarning>
       <body className={`${dmSans.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
+        <Toaster />
       </body>
     </html>
   );

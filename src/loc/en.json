@@ -27,6 +27,10 @@
     "signup_success_title": "Thank you for signing up!",
     "signup_success_desc": "Check your email to confirm",
     "signup_success_message": "You've successfully signed up. Please check your email to confirm your account before signing in.",
+    "signup_success": "Account created successfully",
+    "login_success": "Login successful",
+    "logout_success": "Logged out successfully",
+    "logout_error": "Failed to log out",
     "errors": {
       "invalid_email": "Invalid email address",
       "password_min": "Password must be at least 8 characters",

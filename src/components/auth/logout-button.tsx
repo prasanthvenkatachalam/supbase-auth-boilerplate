@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/hooks/api/use-auth";
 import { ROUTES } from "@/constants";
 
+import { toast } from "sonner";
+
 export function LogoutButton() {
   const router = useRouter();
   const t = useTranslations("auth");
@@ -15,7 +17,11 @@ export function LogoutButton() {
   const handleLogout = () => {
     signOut(undefined, {
       onSuccess: () => {
+        toast.success(t("logout_success"));
         router.replace(ROUTES.AUTH.LOGIN);
+      },
+      onError: () => {
+        toast.error(t("logout_error"));
       },
     });
   };

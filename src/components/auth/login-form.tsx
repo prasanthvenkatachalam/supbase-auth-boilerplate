@@ -25,6 +25,8 @@ import { Captcha } from "./turnstile";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useRef } from "react";
 
+import { toast } from "sonner";
+
 export function LoginForm({
   className,
   ...props
@@ -57,6 +59,7 @@ export function LoginForm({
     setShowPassword(false);
     signIn(data, {
       onSuccess: () => {
+        toast.success(t("login_success") || "Login successful");
         router.replace(ROUTES.PROTECTED);
       },
       onError: (error) => {
