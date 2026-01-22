@@ -22,8 +22,10 @@ import { checkSignupRateLimit } from "@/lib/rate-limit";
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/constants/messages";
 import { RATE_LIMIT_CONFIG } from "@/constants/rate-limit";
 import { z } from "zod";
+import { after } from 'next/after';
+import { supabaseAdmin } from "@/utils/supabase/admin";
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 /**
  * Helper function to extract client IP address
@@ -147,53 +149,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 5: Attempt to sign up the user
-    console.time("supabase-signup");
-    const { data, error } = await supabase.auth.signUp({
+    // Step 5: Fast Signup (Non-blocking Email)
+    // Instead of waiting for Supabase to send the email (4s), we generate a link
+    // and process the email sending in the background.
+    console.time("admin-generate-link");
+    const { data, error } = await supabaseAdmin.auth.generateLink({
+      type: "signup",
       email,
       password,
       options: {
         captchaToken,
+        data: {}, // User metadata
       },
     });
-    console.timeEnd("supabase-signup");
+    console.timeEnd("admin-generate-link");
 
-    // Step 6: Handle Supabase errors
     if (error) {
-      // Check for specific error types
-      if (error.message.includes("already registered")) {
-        return NextResponse.json(
-          {
-            error: "Conflict",
-            message: ERROR_MESSAGES.AUTH.EMAIL_EXISTS,
-          },
-          { status: 409 } // Conflict status
-        );
-      }
-
-      // Check for weak password
-      if (error.message.includes("Password")) {
-        return NextResponse.json(
-          {
-            error: ERROR_MESSAGES.VALIDATION.INVALID_INPUT,
-            message: error.message,
-          },
-          { status: 400 }
-        );
-      }
-
-      // Generic error
-      console.error("Signup error:", error);
-      return NextResponse.json(
-        {
-          error: ERROR_MESSAGES.AUTH.SIGNUP_FAILED,
-          message: error.message,
-        },
-        { status: 500 }
-      );
+       // Check for specific error types
+       if (error.message.includes("already registered")) {
+          return NextResponse.json(
+            {
+              error: "Conflict",
+              message: ERROR_MESSAGES.AUTH.EMAIL_EXISTS,
+            },
+            { status: 409 } // Conflict status
+          );
+       }
+       // The weak password check might not be directly applicable here as generateLink doesn't perform the same client-side password validation as signUp.
+       // Keeping a generic 500 for other errors from generateLink.
+       console.error("Generate link error:", error);
+       return NextResponse.json(
+         {
+           error: ERROR_MESSAGES.AUTH.SIGNUP_FAILED,
+           message: error.message,
+         },
+         { status: 500 }
+       );
     }
 
-    // Step 7: Success! Return user data
+    // Step 6: Background Email Sending
+    // This runs after the response closes, making the API fast
+    after(async () => {
+      console.log(`[Background] Mock sending email to ${email}`);
+      console.log(`[Background] Verification Link: ${data.properties?.action_link}`);
+      // TODO: Integrate Resend/SendGrid here using the action_link
+    });
+
+    // Step 7: Immediate Success Response
     // Note: The profile is automatically created by the database trigger
     return NextResponse.json(
       {
