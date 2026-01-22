@@ -78,6 +78,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
                     placeholder="m@example.com"
                     {...register("email")}
                     className={cn(errors.email && "border-destructive")}
+                    disabled={isPending}
                   />
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email.message}</p>
