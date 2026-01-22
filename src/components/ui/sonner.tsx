@@ -21,9 +21,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg data-[type=success]:!bg-[#04b34f] data-[type=success]:!text-[#000000] data-[type=success]:!border-[#04b34f] data-[type=error]:!bg-[#a6192e] data-[type=error]:!text-[#ffffff] data-[type=error]:!border-[#a6192e] data-[type=warning]:!bg-[#ff9900] data-[type=warning]:!text-[#000000] data-[type=warning]:!border-[#ff9900] data-[type=info]:!bg-[#0057b8] data-[type=info]:!text-[#ffffff] data-[type=info]:!border-[#0057b8]",
+            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg data-[type=success]:!bg-[#04b34f] data-[type=success]:!text-[#ffffff] data-[type=success]:!border-[#04b34f] data-[type=error]:!bg-[#a6192e] data-[type=error]:!text-[#ffffff] data-[type=error]:!border-[#a6192e] data-[type=warning]:!bg-[#ff9900] data-[type=warning]:!text-[#000000] data-[type=warning]:!border-[#ff9900] data-[type=info]:!bg-[#0057b8] data-[type=info]:!text-[#ffffff] data-[type=info]:!border-[#0057b8]",
           description:
-            "group-[.toast]:text-muted-foreground group-data-[type=success]:!text-[#000000] group-data-[type=error]:!text-[#ffffff] group-data-[type=warning]:!text-[#000000] group-data-[type=info]:!text-[#ffffff]",
+            "group-[.toast]:text-muted-foreground group-data-[type=success]:!text-[#ffffff] group-data-[type=error]:!text-[#ffffff] group-data-[type=warning]:!text-[#000000] group-data-[type=info]:!text-[#ffffff]",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton:
