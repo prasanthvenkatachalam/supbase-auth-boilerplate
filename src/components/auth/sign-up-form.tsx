@@ -17,6 +17,7 @@ import { ROUTES } from "@/constants";
 import { Captcha } from "@/components/auth/turnstile";
 import type { TurnstileInstance } from "@marsidev/react-turnstile";
 import { useRef } from "react";
+import { toast } from "sonner";
 
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const t = useTranslations("auth");
@@ -50,6 +51,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
     setShowConfirmPassword(false);
     signUp(data, {
       onSuccess: () => {
+        toast.success(t("signup_success") || "Account created successfully");
         setSuccess(true);
       },
       onError: (error) => {
